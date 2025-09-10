@@ -1,42 +1,51 @@
 #include <linux/sysfs.h>
 #include <linux/kobject.h>
 #include <linux/device.h>
+#include <linux/regmap.h>
 #include "regs.h"
+#include "espcam_i2c.h"
 
 static ssize_t espcam_sysfs_show(struct device *dev, struct device_attribute *attr, char *buf)
-{
-	
+{	
 	struct dev_ext_attribute *ea;
 	struct espcam_context *espcam_ctx = dev_get_drvdata(dev);
 
 	ea = container_of(attr, struct dev_ext_attribute, attr);
 	unsigned int reg = ea->var;
-	
-	return sysfs_emit(buf, "%u\n", reg);
-}
+	unsigned int reg_val;
+	int ret = 0;
 
+	ret = regmap_read(espcam_ctx->regmap, reg, &reg_val);
+	if (ret) {
+		return -EINVAL;
+	}
+
+	return sysfs_emit(buf, "%u\n", reg_val);
+}
 
 static ssize_t espcam_sysfs_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
-	
 	struct dev_ext_attribute *ea;
 	struct espcam_context *espcam_ctx = dev_get_drvdata(dev);
 	ea = container_of(attr, struct dev_ext_attribute, attr);
 	unsigned int reg = ea->var;
 	unsigned int reg_val;
-	
+	int ret;
+
 	if (kstrtoint(buf, 0, &reg_val) < 0) {
 		return 0;
 	}
 	
-
-	pr_info("reg_val: %u", reg_val);
+	ret = regmap_write(espcam_ctx->regmap, reg, reg_val);	
+	if (ret) {
+		return 0;
+	}
 
 	return count;
 }
 
 #define ESPCAM_ATTR(name, mode, show, store, reg) \
-	static struct dev_ext_attribute espcam_dev_attr_##name = { \	
+	static struct dev_ext_attribute espcam_dev_attr_##name = { \
 		.attr = __ATTR(name, mode, show, store), \
 	  	.var = (void *) reg, \
 	} 
@@ -79,23 +88,10 @@ static const struct attribute_group espcam_camera_attribute_group = {
 	.attrs = espcam_camera_attributes,
 };
 
-static const struct attribute_group *espcam_groups[] = {
+const struct attribute_group *espcam_groups[] = {
 	&espcam_attribute_group,
 	&espcam_camera_attribute_group,
 	NULL
 };
 
-static struct kobject *kobj_ref;
-
-int espcam_add_groups(void)
-{
-	kobj_ref = kobject_create_and_add("espcam", kernel_kobj);
-	return sysfs_create_groups(kobj_ref, espcam_groups);
-}
-
-void espcam_remove_groups(void)
-{
-	sysfs_remove_groups(kobj_ref, espcam_groups);
-	kobject_put(kobj_ref);
-}
 
