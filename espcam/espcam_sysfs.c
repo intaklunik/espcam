@@ -1,9 +1,8 @@
 #include <linux/sysfs.h>
 #include <linux/kobject.h>
 #include <linux/device.h>
-#include <linux/regmap.h>
 #include "regs.h"
-#include "espcam_i2c.h"
+#include "espcam.h"
 
 static ssize_t espcam_sysfs_show(struct device *dev, struct device_attribute *attr, char *buf)
 {	

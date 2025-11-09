@@ -1,14 +1,14 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
-#include <linux/i2c.h>
 #include <linux/byteorder/generic.h>
-#include <linux/regmap.h>
 #include "regs.h"
-#include "espcam_i2c.h"
-
+#include "espcam.h"
 
 extern const struct attribute_group *espcam_groups[];
+
+int espcam_spi_register(struct espcam_context *ctx);
+void espcam_spi_unregister(struct espcam_context *ctx);
 
 static const struct regmap_range espcam_volatile_ranges[] = {
 	regmap_reg_range(APP_ID_REG, CAMERA_STREAM_STATUS_REG),
@@ -112,6 +112,7 @@ static const struct regmap_config espcam_regmap_config = {
 
 static int espcam_i2c_probe(struct i2c_client *client)
 {
+	int ret;
 	struct device *dev = &client->dev;
 	struct espcam_context *espcam_ctx;
 
@@ -128,12 +129,16 @@ static int espcam_i2c_probe(struct i2c_client *client)
 		return PTR_ERR(espcam_ctx->regmap);
 	}
 
+	ret = espcam_spi_register(espcam_ctx);
+
+
 	return 0;
 }
 
 static void espcam_i2c_remove(struct i2c_client *client)
 {
 	struct espcam_context *espcam_ctx = dev_get_drvdata(&client->dev);
+	espcam_spi_unregister(espcam_ctx);
 
 	kfree(espcam_ctx);
 }

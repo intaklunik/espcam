@@ -18,4 +18,17 @@
 			};
 		};
 	};
+
+	fragment@1 {
+		target = <&spi0>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			espcamv@0 {
+				compatible = "espcam,vid";
+				reg = <0>;
+			};
+		};
+	};
 };
