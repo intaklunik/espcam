@@ -1,7 +1,5 @@
 #include "espcam.h"
 
-int espcam_register_video(struct spi_device *client);
-void espcam_unregister_video(struct video_device *dev);
 
 static const struct spi_device_id espcam_spi_spi_ids[] = {
 	{"vid", 0},
@@ -21,21 +19,21 @@ static int espcam_spi_probe(struct spi_device *client)
 {
 	int ret = 0;
 	struct espcam_context *espcam_ctx = container_of(client->dev.driver, struct espcam_context, spi_driver.driver);
-	
+
 	espcam_ctx->video_dev = espcam_register_video(client);
-	if (IS_ERR(espcam_ctx->video_dev)) {
+	if (IS_ERR(espcam_ctx->video_dev))
 		return PTR_ERR(espcam_ctx->video_dev);
-	}
 
 	espcam_ctx->spi_device = client;
 	dev_set_drvdata(&client->dev, espcam_ctx);
-	
+
 	return ret;
 }
 
 static void espcam_spi_remove(struct spi_device *client)
 {
 	struct espcam_context *espcam_ctx = dev_get_drvdata(&client->dev);
+
 	espcam_unregister_video(espcam_ctx->video_dev);
 }
 

@@ -39,6 +39,7 @@ static void espcam_init_format(struct espcam_video *dev)
 static int espcam_init_vbq(struct espcam_video *dev)
 {
 	struct vb2_queue *q = &dev->vb_queue;
+
 	memset(q, 0, sizeof(struct vb2_queue));
 	q->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	q->io_modes = VB2_MMAP;
@@ -53,33 +54,33 @@ static int espcam_init_vbq(struct espcam_video *dev)
 	return vb2_queue_init(q);
 }
 
-struct video_device * espcam_register_video(struct spi_device *spi)
+struct video_device *espcam_register_video(struct spi_device *spi)
 {
 	int ret = 0;
-	
+
 	struct espcam_video *espcam_dev = kzalloc(sizeof(struct espcam_video), GFP_KERNEL);
-	if (!espcam_dev) {
+
+	if (!espcam_dev)
 		return ERR_PTR(-ENOMEM);
-	}
 
 	espcam_init_format(espcam_dev);
-	
+
 	strscpy(espcam_dev->v4l2_dev.name, "espcam", sizeof(espcam_dev->v4l2_dev.name));
 	ret = v4l2_device_register(NULL, &espcam_dev->v4l2_dev);
-	if (ret) {
+	if (ret)
 		goto free_espcam;
-	}
 
 	ret = espcam_init_vbq(espcam_dev);
-	if (ret) {
+	if (ret)
 		goto unreg_v4l2;
-	}
 
-	INIT_LIST_HEAD(&espcam_dev->buf_queue);	
+	INIT_LIST_HEAD(&espcam_dev->buf_queue);
 	spin_lock_init(&espcam_dev->qlock);
-	
+
 	struct video_device *vdev = &espcam_dev->video_device;
+
 	strscpy(vdev->name, "espcamvdev", sizeof(vdev->name));
+
 	vdev->v4l2_dev = &espcam_dev->v4l2_dev;
 	vdev->fops = &espcam_file_ops;
 	vdev->ioctl_ops = &espcam_ioctl_ops;
@@ -90,22 +91,20 @@ struct video_device * espcam_register_video(struct spi_device *spi)
 	video_set_drvdata(vdev, espcam_dev);
 
 	ret = espcam_create_controls(espcam_dev);
-	if (ret) {
+	if (ret)
 		goto free_vbq;
-	}
 
 	espcam_dev->client = spi;
 
 	ret = video_register_device(vdev, VFL_TYPE_VIDEO, -1);
-	if (ret < 0) {
+	if (ret < 0)
 		goto free_ctrls;
-	}
 
 
 	return &espcam_dev->video_device;
 
 free_ctrls:
-	espcam_free_controls(espcam_dev);	
+	espcam_free_controls(espcam_dev);
 free_vbq:
 	vb2_queue_release(&espcam_dev->vb_queue);
 unreg_v4l2:

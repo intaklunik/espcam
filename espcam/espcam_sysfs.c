@@ -5,7 +5,7 @@
 #include "espcam.h"
 
 static ssize_t espcam_sysfs_show(struct device *dev, struct device_attribute *attr, char *buf)
-{	
+{
 	struct dev_ext_attribute *ea;
 	struct espcam_context *espcam_ctx = dev_get_drvdata(dev);
 
@@ -15,9 +15,8 @@ static ssize_t espcam_sysfs_show(struct device *dev, struct device_attribute *at
 	int ret = 0;
 
 	ret = regmap_read(espcam_ctx->regmap, reg, &reg_val);
-	if (ret) {
+	if (ret)
 		return -EINVAL;
-	}
 
 	return sysfs_emit(buf, "%u\n", reg_val);
 }
@@ -26,19 +25,18 @@ static ssize_t espcam_sysfs_store(struct device *dev, struct device_attribute *a
 {
 	struct dev_ext_attribute *ea;
 	struct espcam_context *espcam_ctx = dev_get_drvdata(dev);
+
 	ea = container_of(attr, struct dev_ext_attribute, attr);
 	unsigned int reg = ea->var;
 	unsigned int reg_val;
 	int ret;
 
-	if (kstrtoint(buf, 0, &reg_val) < 0) {
+	if (kstrtoint(buf, 0, &reg_val) < 0)
 		return 0;
-	}
-	
-	ret = regmap_write(espcam_ctx->regmap, reg, reg_val);	
-	if (ret) {
+
+	ret = regmap_write(espcam_ctx->regmap, reg, reg_val);
+	if (ret)
 		return 0;
-	}
 
 	return count;
 }
@@ -46,8 +44,8 @@ static ssize_t espcam_sysfs_store(struct device *dev, struct device_attribute *a
 #define ESPCAM_ATTR(name, mode, show, store, reg) \
 	static struct dev_ext_attribute espcam_dev_attr_##name = { \
 		.attr = __ATTR(name, mode, show, store), \
-	  	.var = (void *) reg, \
-	} 
+		.var = (void *) reg, \
+	}
 
 #define ESPCAM_ATTR_RO(name, func, reg) \
 	ESPCAM_ATTR(name, 0444, func##_show, NULL, reg)

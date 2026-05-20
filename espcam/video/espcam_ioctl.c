@@ -7,7 +7,7 @@ static int espcam_vidioc_querycap(struct file *file, void *priv, struct v4l2_cap
 	strscpy(cap->driver, "espcam", sizeof(cap->driver));
 	strscpy(cap->card, "espcam card", sizeof(cap->card));
 	cap->capabilities = V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_STREAMING | V4L2_CAP_DEVICE_CAPS;
-	
+
 	return 0;
 }
 
@@ -15,10 +15,9 @@ static int espcam_vidioc_enum_fmt(struct file *file, void *fh, struct v4l2_fmtde
 {
 	struct espcam_video *dev = video_drvdata(file);
 
-	if (fmt->type != dev->fmt.type || fmt->index != 0) {
+	if (fmt->type != dev->fmt.type || fmt->index != 0)
 		return -EINVAL;
-	}
-	
+
 	memset(fmt, 0, sizeof(*fmt));
 	fmt->index = 0;
 	fmt->type = dev->fmt.type;
@@ -31,9 +30,8 @@ static int espcam_vidioc_enum_fmt(struct file *file, void *fh, struct v4l2_fmtde
 
 static int espcam_set_format(struct espcam_video *dev, struct v4l2_format *fmt)
 {
-	if (fmt->type != dev->fmt.type) {
+	if (fmt->type != dev->fmt.type)
 		return -EINVAL;
-	}
 
 	fmt->fmt.pix.pixelformat = dev->fmt.pixelformat;
 	fmt->fmt.pix.width = dev->fmt.width;
@@ -51,34 +49,33 @@ static int espcam_set_format(struct espcam_video *dev, struct v4l2_format *fmt)
 static int espcam_vidioc_g_fmt(struct file *file, void *fh, struct v4l2_format *fmt)
 {
 	struct espcam_video *dev = video_drvdata(file);
-	
+
 	return espcam_set_format(dev, fmt);
 }
 
 static int espcam_vidioc_s_fmt(struct file *file, void *fh, struct v4l2_format *fmt)
 {
 	struct espcam_video *dev = video_drvdata(file);
-	
+
 	return espcam_set_format(dev, fmt);
 }
 
 static int espcam_vidioc_try_fmt(struct file *file, void *fh, struct v4l2_format *fmt)
 {
 	struct espcam_video *dev = video_drvdata(file);
-	
+
 	return espcam_set_format(dev, fmt);
 }
 
 static int espcam_vidioc_enum_input(struct file *file, void *fh, struct v4l2_input *input)
 {
-	if (input->index != 0) {
+	if (input->index != 0)
 		return -EINVAL;
-	}
 	memset(input, 0, sizeof(*input));
 	input->index = 0;
 	strscpy(input->name, "espcam0", sizeof(input->name));
 	input->type = V4L2_INPUT_TYPE_CAMERA;
-	
+
 	return 0;
 }
 
@@ -93,9 +90,8 @@ static int espcam_vidioc_g_parm(struct file *file, void *fh, struct v4l2_streamp
 {
 	struct espcam_video *dev = video_drvdata(file);
 
-	if (parm->type != dev->fmt.type) {
+	if (parm->type != dev->fmt.type)
 		return -EINVAL;
-	}
 
 	memset(parm, 0, sizeof(*parm));
 	parm->type = dev->fmt.type;
@@ -113,10 +109,9 @@ static int espcam_vidioc_s_parm(struct file *file, void *fh, struct v4l2_streamp
 {
 	struct espcam_video *dev = video_drvdata(file);
 
-	if (parm->type != dev->fmt.type) {
+	if (parm->type != dev->fmt.type)
 		return -EINVAL;
-	}
-	
+
 	parm->parm.capture.timeperframe.numerator = 1;
 	parm->parm.capture.timeperframe.denominator = dev->fmt.framerate;
 
